@@ -148,48 +148,48 @@ Intrinsic importance $\rightarrow$ intrinsic selection
 
 ---
 
-## Super Learner extrinsic selection
+## Intrinsic variable importance
 
-Setup:
-* data unit $(X, Y) \sim P_0$ with outcome $Y$ and covariate $X := (X_1, X_2, \ldots, X_p)$
-* goal: measure extrinsic importance of $(X_j: j \in \{1, \ldots, p\})$
-
---
-
-Relying on a single algorithm: could be .red[misspecified]
+Intrinsic variable importance: 
+* Choose a relevant measure of .blue1[predictiveness] for the task at hand
 
 --
 
-Instead fit a .blue1[Super Learner ensemble] with $L$ learners .small[(van der Laan et al., 2007)]
+  * $V(f, P) =$ .blue1[predictiveness] of function $f$ under sampling from $P$
+  * $\mathcal{F} =$ rich class of candidate prediction functions
+  * $\mathcal{F}_{-s} =$ {all functions in $\mathcal{F}$ that ignore components with index in $s$} $\subset \mathcal{F}$
+  
+--
+
+* Define the oracle prediction functions
+
+  $f_0:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}$ & $f_{0,s}:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}_{-s}$
 
 --
 
-Super Learner returns a set of weights $\{w_\ell\}_{\ell = 1}^L$ such that:
-  * $0 \leq w_\ell \leq 1$ for all $\ell$, $\sum_{\ell = 1}^L w_\ell = 1$
-  * the final ensemble minimizes a cross-validated loss function
+Define the importance of $(X_j: j \in s)$ relative to $X$ as $$\color{magenta}{V(f_0, P_0) - V(f_{0,s}, P_0) \geq 0}$$
 
 ---
 
-## Super Learner extrinsic selection
+## Intrinsic variable importance
 
-Provided a threshold $\kappa \geq 1$:
-1. Fit a Super Learner with $L$ candidate learners, get $\{w_\ell\}_{\ell = 1}^L$;
+Some examples of predictiveness measures:
 
---
+(arbitrary outcomes)
 
-2. Obtain ranked algorithm-specific importance $\{r_{j,\ell}\}_{j=1}^p$;
-
---
-
-3. Compute $r_{j,L} := \sum_{\ell=1}^L w_\ell r_{j,\ell}$;
+&zwj; $R^2$: $V(f, P) = 1 - E_P\{Y - f(X)\}^2 / var_P(Y)$
 
 --
 
-4. Select all variables with index in $\{j \in \{1, \ldots, p\}: r_{j,L} < \kappa\}$
+(binary outcomes)
+
+Classification accuracy: $V(f, P) = P\{Y = f(X)\}$
+
+&zwj;AUC: $V(f, P) = P\{f(X_1) < f(X_2) \mid Y_1 = 0, Y_2 = 1\}$ for $(X_1, Y_1) \perp (X_2, Y_2)$
 
 --
 
-Can also be embedded within .blue1[stability selection]
+<blockquote> Inference can be carried out using influence functions .small[(Williamson et al., 2021)] </blockquote>
 
 ---
 
@@ -198,7 +198,7 @@ Can also be embedded within .blue1[stability selection]
 One possible measure: SPVIM .small[(Williamson & Feng, 2020)]
 $$\psi_{0,j} := \sum_{s \in \{1, \ldots, p\} \setminus \{j\}} \frac{1}{p}\binom{p - 1}{\lvert s \rvert}^{-1}\{V(f_{0,s\cup\{j\}}, P_0) - V(f_{0,s}, P_0)\},$$ where:
 * $V$ is a user-specified measure of 'predictiveness' (e.g., $R^2$)
-* $f_{0,s} \in \text{arg max}_{f \in \mathcal{F}} V(f, P_0)$ for class of candidate functions $\mathcal{F}$;
+* $f_{0,s} \in \text{arg max}_{f \in \mathcal{F}} V(f, P_0)$ for class of candidate functions $\mathcal{F}_s$;
 
 
 --
@@ -264,21 +264,6 @@ And the resulting procedure is .blue1[persistant]
 
 ---
 
-## Extrinsic selection with missing data
-
-Previous approaches all work with complete data
-
---
-
-Several options for missing data, including:
-1. Embed within bootstrapped procedure .small[(Long & Johnson, 2015)]
-
---
-
-2. Harmonize after $M$ imputations .small[(Heymans et al., 2007)]
-
----
-
 ## Intrinsic selection with missing data
 
 How can we select variables based on $\psi_{0,j}$ with missing data? 
@@ -309,7 +294,6 @@ Selection procedures:
   * lasso + knockoffs .small[ [Barber and Candes (2015)] ]
 
 --
-* extrinsic selection 
 * intrinsic selection (SPVIM with augmentation)
 
 --
@@ -382,8 +366,7 @@ knitr::include_graphics(c(
 
 ## Perspective and closing thoughts
 
-* Use ensemble to achieve more stable extrinsic selection
-* Error rate control possible with intrinsic selection
+* Error rate control possible with flexible intrinsic selection
 * Computation time can be .red[quite large] depending on flexibility
 * Choice of selection procedure likely depends on trade-off between:
   * computation time
@@ -417,18 +400,19 @@ ul li {
 * .tiny[ Garcia, R., J. Ibrahim, and H. Zhu (2010). Variable selection for regression models with missing data. *Statistica Sinica*. ]
 * .tiny[Heymans, M., S. van Buuren, D. Knol, et al. (2007). Variable selection under multiple imputation using the bootstrap in a prognostic study. *BMC Medical Research Methodology*.]
 * .tiny[Johnson, B., D. Lin, and D. Zeng (2008). Penalized estimating functions and variable selection in semiparametric regression models. *Journal of the American Statistical Association*.]
+* .tiny[ Little, R. and M. Schluchter (1985). Maximum likelihood estimation for mixed continuous and categorical data with missing values. *Biometrika*.]
+* .tiny[Liu, L., Y. Qiu, L. Natarajan, and K. Messer (2019). Imputation and post-selection inference in models with missing data: an application to colorectal cancer surveillance guidelines. *Annals of Applied Statistics*.]
 ]
 ]
 .pull-right[
 .smalllist[
-* .tiny[ Little, R. and M. Schluchter (1985). Maximum likelihood estimation for mixed continuous and categorical data with missing values. *Biometrika*.]
-* .tiny[Liu, L., Y. Qiu, L. Natarajan, and K. Messer (2019). Imputation and post-selection inference in models with missing data: an application to colorectal cancer surveillance guidelines. *Annals of Applied Statistics*.]
 * .tiny[Long, Q. and B. Johnson (2015). Variable selection in the presence of missing data: resampling and imputation. *Biostatistics*.]
 * .tiny[Meinshausen, N. and P. Bühlmann (2010). Stability selection. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*.]
 * .tiny[Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*.]
 * .tiny[Tsiatis, A. (2007). *Semiparametric theory and missing data*. Springer Science & Business Media.]
 * .tiny[van der Laan, M.J., E. Polley, and A. Hubbard (2007). Super learner. *Statistical Applications in Genetics and Molecular Biology*.]
 * .tiny[Williamson, B.D. and J. Feng (2020). Efficient nonparametric statistical inference on population feature importance using Shapley values. In *Proceedings of the 37th International Conference on Machine Learning*.]
+* .tiny[ Williamson BD, Gilbert P, Simon N, and Carone M (2021). A general framework for inference on algorithm-agnostic variable importance. _Journal of the American Statistical Association_. ]
 * .tiny[Williamson, B.D. and Y. Huang (2022). Flexible variable selection in the presence of missing data. *arXiv*.]
 * .tiny[Zhao, Y. and Q. Long (2017). Variable selection in the presence of missing data: imputation-based methods. *Wiley Interdisciplinary Reviews: Computational Statistics*.]
 ]
