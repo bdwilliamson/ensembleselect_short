@@ -157,17 +157,13 @@ Intrinsic variable importance:
 
   * $V(f, P) =$ .blue1[predictiveness] of function $f$ under sampling from $P$
   * $\mathcal{F} =$ rich class of candidate prediction functions
-  * $\mathcal{F}_{-s} =$ {all functions in $\mathcal{F}$ that ignore components with index in $s$} $\subset \mathcal{F}$
+  * $\mathcal{F}_{s} =$ {all functions in $\mathcal{F}$ that use only components with index in $s$} $\subset \mathcal{F}$
   
 --
 
 * Define the oracle prediction functions
 
-  $f_0:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}$ & $f_{0,s}:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}_{-s}$
-
---
-
-Define the importance of $(X_j: j \in s)$ relative to $X$ as $$\color{magenta}{V(f_0, P_0) - V(f_{0,s}, P_0) \geq 0}$$
+  $f_{0,s}:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}_{-s}$
 
 ---
 
@@ -197,7 +193,7 @@ Classification accuracy: $V(f, P) = P\{Y = f(X)\}$
 
 One possible measure: SPVIM .small[(Williamson & Feng, 2020)]
 $$\psi_{0,j} := \sum_{s \in \{1, \ldots, p\} \setminus \{j\}} \frac{1}{p}\binom{p - 1}{\lvert s \rvert}^{-1}\{V(f_{0,s\cup\{j\}}, P_0) - V(f_{0,s}, P_0)\},$$ where:
-* $V$ is a user-specified measure of 'predictiveness' (e.g., $R^2$)
+* $V$ = predictiveness (e.g., $R^2$)
 * $f_{0,s} \in \text{arg max}_{f \in \mathcal{F}} V(f, P_0)$ for class of candidate functions $\mathcal{F}_s$;
 
 
