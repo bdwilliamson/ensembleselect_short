@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Flexible variable selection in the presence of missing data</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Brian D. Williamson, PhD   Kaiser Permanente Washington Health Research Institute" />
+    <link href="index_files/tile-view-0.2.6/tile-view.css" rel="stylesheet" />
+    <script src="index_files/tile-view-0.2.6/tile-view.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, title-slide
+
+# Flexible variable selection in the presence of missing data
+### Brian D. Williamson, PhD<br> <span style="font-size: 75%;"> Kaiser Permanente Washington Health Research Institute </span>
+### 13 June, 2022 <br> <a href = 'https://bdwilliamson.github.io/' style = 'color: white;'>https://bdwilliamson.github.io/</a>
+
+---
+
+
+
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 20px
+    header-h2-font-size: 1.75rem;
+}
+&lt;/style&gt;
+
+## Acknowledgments
+
+This work was done in collaboration with:
+&lt;img src="img/people1.PNG" width="75%" style="display: block; margin: auto;" /&gt;
+
+Many thanks for support from NIGMS!
+
+---
+
+## Challenge: variable selection with missing data
+
+Goals of variable selection:
+* identify a .green[parsimonious] set of features
+* achieve .blue1[desired level of performance]
+
+--
+
+How do we measure performance?
+* .red[error rate control]: not too many unimportant variables were selected
+* .blue2[predictiveness]: how well our parsimonious set predicts the outcome
+
+--
+
+Identifying and assessing sets of variables is .red[complex] with missing data
+
+---
+
+## Challenge: variable selection with missing data
+
+Common approaches to handling missing data:
+* model the likelihood .small[(Little &amp; Schluchter, 1985; Garcia et al., 2010)];
+* use inverse probability weighting .small[(Tsiatis, 2007; Bang &amp; Robins, 2005; Johnson et al., 2008)];
+* use multiple imputations .small[(Long &amp; Johnson, 2015; Zhao &amp; Long, 2017; Liu et al., 2019)]
+
+--
+
+Variable selection with missing data: uses "complete" data
+
+--
+
+Selection is typically based on a generalized linear model:
+* lasso .small[(Tibshirani, 1996)] or SCAD .small[(Fan and Li, 2001)]
+* knockoffs .small[(Barber and Candès, 2015)]
+* stability selection .small[(Meinshausen and Bühlmann, 2010)]
+
+--
+
+Potential issue: .red[model misspecification]
+
+---
+
+## Flexible variable selection
+
+**What is flexible variable selection?**
+* Allow specification of flexible (i.e., nonlinear) algorithms
+* e.g., trees, forests, ensembles
+
+--
+
+.green[Robustness to model misspecification] depends on the algorithms considered
+
+--
+
+Our work seeks to:
+* combine multiple imputation with flexible variable selection
+* provide error rate control for intrinsic selection procedures
+
+---
+
+## Variable importance in selection
+
+A natural procedure for flexible selection uses .green[variable importance]:
+
+--
+
+Choose and estimate a measure of variable importance 
+* .blue1[extrinsic importance] .small[(e.g., Breiman, 2001)]
+* .blue1[intrinsic importance] .small[(e.g., Williamson &amp; Feng, 2020)]
+
+--
+
+Select variables based on .blue2[decreasing importance]
+
+--
+
+Extrinsic importance `\(\rightarrow\)` extrinsic selection
+
+Intrinsic importance `\(\rightarrow\)` intrinsic selection
+
+---
+
+## Intrinsic variable importance
+
+Intrinsic variable importance: 
+* Choose a relevant measure of .blue1[predictiveness] for the task at hand
+
+--
+
+  * `\(V(f, P) =\)` .blue1[predictiveness] of function `\(f\)` under sampling from `\(P\)`
+  * `\(\mathcal{F} =\)` rich class of candidate prediction functions
+  * `\(\mathcal{F}_{s} =\)` {all functions in `\(\mathcal{F}\)` that use only components with index in `\(s\)`} `\(\subset \mathcal{F}\)`
+  
+--
+
+* Define the oracle prediction functions
+
+  `\(f_{0,s}:=\)` maximizer of `\(V(f, P_0)\)` over `\(\mathcal{F}_{-s}\)`
+
+---
+
+## Intrinsic variable importance
+
+Some examples of predictiveness measures:
+
+(arbitrary outcomes)
+
+&amp;zwj; `\(R^2\)`: `\(V(f, P) = 1 - E_P\{Y - f(X)\}^2 / var_P(Y)\)`
+
+--
+
+(binary outcomes)
+
+Classification accuracy: `\(V(f, P) = P\{Y = f(X)\}\)`
+
+&amp;zwj;AUC: `\(V(f, P) = P\{f(X_1) &lt; f(X_2) \mid Y_1 = 0, Y_2 = 1\}\)` for `\((X_1, Y_1) \perp (X_2, Y_2)\)`
+
+--
+
+&lt;blockquote&gt; Inference can be carried out using influence functions .small[(Williamson et al., 2021)] &lt;/blockquote&gt;
+
+---
+
+## Intrinsic variable selection
+
+One possible measure: SPVIM .small[(Williamson &amp; Feng, 2020)]
+`$$\psi_{0,j} := \sum_{s \in \{1, \ldots, p\} \setminus \{j\}} \frac{1}{p}\binom{p - 1}{\lvert s \rvert}^{-1}\{V(f_{0,s\cup\{j\}}, P_0) - V(f_{0,s}, P_0)\},$$` where:
+* `\(V\)` = predictiveness (e.g., `\(R^2\)`)
+* `\(f_{0,s} \in \text{arg max}_{f \in \mathcal{F}} V(f, P_0)\)` for class of candidate functions `\(\mathcal{F}_s\)`;
+
+
+--
+
+&lt;blockquote&gt; If \(\psi_{0,j} = 0\), then \(X_j\) .red[does not improve] population prediction potential when added to .green[any subset] of the remaining features &lt;/blockquote&gt;
+
+--
+
+&amp;zwj;Idea: test variable importance for selection, i.e., test `$$H_0: \psi_{0,j} = 0 \text{ vs } H_1: \psi_{0,j} &gt; 0 \text{ for each } j \in \{1, \ldots, p\}$$`
+
+---
+
+## Intrinsic variable selection
+
+How can we select variables based on `\(\psi_{0,j}\)`?
+
+--
+
+1. Estimate `\(\psi_0 = \{\psi_{0,j}\}_{j=1}^p\)`, obtain p-values `\(p_{n,j}\)` for each test of zero importance
+
+--
+
+3. Compute .blue1[adjusted] p-values `\(\tilde{p}_{n,j}\)` to control the .blue2[family-wise error rate] (FWER)
+
+--
+
+4. Set `\(S_n(\alpha) = \{j \in \{1, \ldots, p\}: \tilde{p}_{n,j} &lt; \alpha\}\)`
+
+--
+
+5. For `\(k \in \{0, \ldots, p - \lvert S_n(\alpha)\rvert\}\)`, determine .blue1[augmentation set] 
+`$$A_n(k, \alpha) = \{s \subseteq S_n^c(\alpha): \tilde{p}_{n,\ell} \leq \tilde{p}_{n,(k)} \text{ for all } \ell \in s\}$$` 
+  
+  (if `\(k = 0\)`, `\(A_n(k, \alpha) = \emptyset\)`)
+
+--
+
+6. Final set of selected variables: `\(S_n^+(k, \alpha) = S_n(\alpha) \cup A_n(k, \alpha)\)`
+
+---
+
+## Intrinsic variable selection
+
+The .blue1[augmentation set] allows for error control using a tuning parameter `\(k \in \{0, \ldots, p - \lvert S_n(\alpha)\rvert\}\)`
+
+--
+
+Examples of more general error rates: 
+
+* .blue2[generalized FWER]: probability of making more than `\(k + 1\)` type I errors
+
+* .blue2[proportion of false positives] among the rejected variables greater than `\(q(k) \in (0, 1)\)`
+
+* .blue2[false discovery rate]
+
+--
+
+`\(k\)` can be determined to .blue1[control one of these error rates]! 
+
+And the resulting procedure is .blue1[persistant]
+
+.small[ [Details in Williamson and Huang (2022)] ]
+
+---
+
+## Intrinsic selection with missing data
+
+How can we select variables based on `\(\psi_{0,j}\)` with missing data? 
+
+--
+
+1. Multiply impute the data
+
+--
+
+2. Estimate `\(\psi_0\)` on each imputed dataset
+
+--
+
+3. Use Rubin's rules: combine estimates, standard errors; obtain p-values
+
+--
+
+4. Proceed as with complete data
+
+---
+
+## Numerical results
+
+Selection procedures:
+* lasso 
+  * lasso + stability selection .small[ [Meinshausen and Buhlmann (2010)] ] 
+  * lasso + knockoffs .small[ [Barber and Candes (2015)] ]
+
+--
+* intrinsic selection (SPVIM with augmentation)
+
+--
+
+Two settings: (binary outcome, continuous features, varying missing data)
+* linear outcome-feature relationship (setting 1)
+  * 6 important features (some very important, some weakly important)
+  * `\(p \in \{30, 500\}\)`
+
+--
+
+* nonlinear outcome-feature relationship, correlated features (setting 2)
+  * 3 important features (all equally weakly important)
+  * `\(p = 6\)`
+  
+---
+
+## Numerical results: setting 1
+
+&lt;img src="img/binomial-probit-linear-normal-nested_talks-auc.png" width="960" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Numerical results: setting 1
+
+&lt;img src="img/binomial-probit-linear-normal-nested_talks-sens-spec.png" width="960" style="display: block; margin: auto;" /&gt;
+
+---
+
+
+## Numerical results: setting 2
+
+&lt;img src="img/nonlinear-normal-correlated_talks-auc.png" width="960" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Numerical results: setting 2
+
+&lt;img src="img/nonlinear-normal-correlated_talks-sens-spec.png" width="960" style="display: block; margin: auto;" /&gt;
+
+---
+
+
+## Classifying pancreatic cysts
+
+Cross-validated AUC of each procedure for selecting sets:
+&lt;img src="img/data-analysis_v2.png" width="960" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Perspective and closing thoughts
+
+* Error rate control possible with flexible intrinsic selection
+* Computation time can be .red[quite large] depending on flexibility
+* Choice of selection procedure likely depends on trade-off between:
+  * computation time
+  * desired sensitivity/specificity
+* Important to use flexible final prediction algorithm regardless
+
+* R package [`flevr`](https://github.com/bdwilliamson/flevr)
+
+&lt;svg viewBox="0 0 496 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"&gt;&lt;/path&gt;&lt;/svg&gt; https://github.com/bdwilliamson | &lt;svg viewBox="0 0 496 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M336.5 160C322 70.7 287.8 8 248 8s-74 62.7-88.5 152h177zM152 256c0 22.2 1.2 43.5 3.3 64h185.3c2.1-20.5 3.3-41.8 3.3-64s-1.2-43.5-3.3-64H155.3c-2.1 20.5-3.3 41.8-3.3 64zm324.7-96c-28.6-67.9-86.5-120.4-158-141.6 24.4 33.8 41.2 84.7 50 141.6h108zM177.2 18.4C105.8 39.6 47.8 92.1 19.3 160h108c8.7-56.9 25.5-107.8 49.9-141.6zM487.4 192H372.7c2.1 21 3.3 42.5 3.3 64s-1.2 43-3.3 64h114.6c5.5-20.5 8.6-41.8 8.6-64s-3.1-43.5-8.5-64zM120 256c0-21.5 1.2-43 3.3-64H8.6C3.2 212.5 0 233.8 0 256s3.2 43.5 8.6 64h114.6c-2-21-3.2-42.5-3.2-64zm39.5 96c14.5 89.3 48.7 152 88.5 152s74-62.7 88.5-152h-177zm159.3 141.6c71.4-21.2 129.4-73.7 158-141.6h-108c-8.8 56.9-25.6 107.8-50 141.6zM19.3 352c28.6 67.9 86.5 120.4 158 141.6-24.4-33.8-41.2-84.7-50-141.6h-108z"&gt;&lt;/path&gt;&lt;/svg&gt; https://bdwilliamson.github.io
+
+---
+
+## References
+
+&lt;style type="text/css"&gt;div.smalllist
+ul li {
+  margin-bottom: 4px;
+  line-height: 11px;
+}
+&lt;/style&gt;
+
+.small[Many thanks for tuning in!]
+.pull-left[
+.smalllist[
+* .tiny[Barber, R. and E.J. Candès (2015). Controlling the false discovery rate via knockoffs. *Annals of Statistics*.]
+* .tiny[Bang, H. and J. Robins (2005). Doubly robust estimation in missing data and causal inference models. *Biometrics*.]
+* .tiny[Breiman, L. (2001). Random forests. *Machine Learning*.]
+* .tiny[Dudoit, S., J. Shaffer, and J. Boldrick (2003). Multiple hypothesis testing in microarray experiments. *Statistical Science*.]
+* .tiny[Dudoit, S. and M.J. van der Laan (2008). *Multiple testing procedures with applications to genomics*. Springer Science &amp; Business Media.]
+* .tiny[Fan, J. and R. Li (2001). Variable selection via nonconcave penalized likelihood and its oracle properties. *Journal of the American Statistical Association*.]
+* .tiny[ Garcia, R., J. Ibrahim, and H. Zhu (2010). Variable selection for regression models with missing data. *Statistica Sinica*. ]
+* .tiny[Heymans, M., S. van Buuren, D. Knol, et al. (2007). Variable selection under multiple imputation using the bootstrap in a prognostic study. *BMC Medical Research Methodology*.]
+* .tiny[Johnson, B., D. Lin, and D. Zeng (2008). Penalized estimating functions and variable selection in semiparametric regression models. *Journal of the American Statistical Association*.]
+* .tiny[ Little, R. and M. Schluchter (1985). Maximum likelihood estimation for mixed continuous and categorical data with missing values. *Biometrika*.]
+* .tiny[Liu, L., Y. Qiu, L. Natarajan, and K. Messer (2019). Imputation and post-selection inference in models with missing data: an application to colorectal cancer surveillance guidelines. *Annals of Applied Statistics*.]
+]
+]
+.pull-right[
+.smalllist[
+* .tiny[Long, Q. and B. Johnson (2015). Variable selection in the presence of missing data: resampling and imputation. *Biostatistics*.]
+* .tiny[Meinshausen, N. and P. Bühlmann (2010). Stability selection. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*.]
+* .tiny[Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*.]
+* .tiny[Tsiatis, A. (2007). *Semiparametric theory and missing data*. Springer Science &amp; Business Media.]
+* .tiny[van der Laan, M.J., E. Polley, and A. Hubbard (2007). Super learner. *Statistical Applications in Genetics and Molecular Biology*.]
+* .tiny[Williamson, B.D. and J. Feng (2020). Efficient nonparametric statistical inference on population feature importance using Shapley values. In *Proceedings of the 37th International Conference on Machine Learning*.]
+* .tiny[ Williamson BD, Gilbert P, Simon N, and Carone M (2021). A general framework for inference on algorithm-agnostic variable importance. _Journal of the American Statistical Association_. ]
+* .tiny[Williamson, B.D. and Y. Huang (2022). Flexible variable selection in the presence of missing data. *arXiv*.]
+* .tiny[Zhao, Y. and Q. Long (2017). Variable selection in the presence of missing data: imputation-based methods. *Wiley Interdisciplinary Reviews: Computational Statistics*.]
+]
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "tomorrow-night-blue",
+"highlightLanguage": "rmarkdown",
+"highlightLines": false,
+"slideNumberFormat": "%current%",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
