@@ -1,7 +1,7 @@
 ---
 title: "Flexible variable selection in the presence of missing data"
 author: "Brian D. Williamson, PhD<br> <span style= 'font-size: 75%;'> Kaiser Permanente Washington Health Research Institute </span>"
-date: "13 June, 2022 <br> <a href = 'https://bdwilliamson.github.io/' style = 'color: white;'>https://bdwilliamson.github.io/</a>"
+date: "13 June, 2022 <br> <a href = 'https://bdwilliamson.github.io/talks' style = 'color: white;'>https://bdwilliamson.github.io/talks</a>"
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
