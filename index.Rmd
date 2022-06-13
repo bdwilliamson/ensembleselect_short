@@ -163,7 +163,7 @@ Intrinsic variable importance:
 
 * Define the oracle prediction functions
 
-  $f_{0,s}:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}_{-s}$
+  $f_{0,s}:=$ maximizer of $V(f, P_0)$ over $\mathcal{F}_{s}$
 
 ---
 
