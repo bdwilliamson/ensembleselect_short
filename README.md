@@ -4,7 +4,7 @@
 
 Slides for a talk on model-agnostic variable selection.
 
-The slides may be viewed here.
+The slides may be viewed [here](https://bdwilliamson.github.io/ensembleselect_short).
 
 Shield: [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
 
